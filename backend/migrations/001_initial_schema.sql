@@ -8,7 +8,7 @@ CREATE DOMAIN sensor_mask AS text
 
 CREATE DOMAIN sensor_state AS text
   CONSTRAINT sensor_state_values
-  CHECK (VALUE IN ('OK', 'WARN', 'CRIT'));
+  CHECK (VALUE IN ('OK', 'WARN', 'CRIT', 'IGNORED'));
 
 CREATE TABLE station (
   id            uuid PRIMARY KEY DEFAULT uuidv7(),
