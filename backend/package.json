@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node --env-file=.env --watch src/server.js",
     "start": "node --env-file=.env src/server.js",
-    "db:check": "node --env-file=.env src/db/check.js"
+    "db:check": "node --env-file=.env src/db/check.js",
+    "db:migrate": "node --env-file=.env src/db/migrate.js"
   },
   "keywords": [],
   "author": "",
