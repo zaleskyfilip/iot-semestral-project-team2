@@ -22,4 +22,10 @@ const receiveSchema = {
   measurements,
 };
 
-module.exports = { receiveSchema, measurements, MODES };
+// GET /api/telemetry/history
+const historySchema = {
+  stationId: { type: 'string', required: true, format: 'uuid' },
+  range: { type: 'string', required: false, enum: ['24h', '7d', '30d'] },
+};
+
+module.exports = { receiveSchema, historySchema, measurements, MODES };

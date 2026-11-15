@@ -10,4 +10,10 @@ router.post('/', async (req, res) => {
   res.status(output.telemetryId ? 201 : 200).json(output);
 });
 
+// GET /api/telemetry/history?stationId=...&range=7d
+router.get('/history', async (req, res) => {
+  const output = await telemetryService.getHistory(req.query);
+  res.json(output);
+});
+
 module.exports = router;
