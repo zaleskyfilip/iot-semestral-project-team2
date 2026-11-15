@@ -1,48 +1,48 @@
+const { pool } = require('../db');
 const stationDao = require('../dao/station-dao');
 const deviceConfigDao = require('../dao/device-config-dao');
 const telemetryDao = require('../dao/telemetry-dao');
 const { evaluateTelemetry } = require('./evaluate');
 const { validateInput } = require('../validation/validate');
-const { receiveSchema, historySchema } = require('../validation/telemetry-schemas');
+const { receiveSchema, batchSchema, historySchema } = require('../validation/telemetry-schemas');
 const AppError = require('../errors/app-error');
 
-// POST /api/telemetry 
-async function receive(input) {
-  
-  const warnings = validateInput(input, receiveSchema);
-
-  
-  const station = await stationDao.findById(input.stationId);
+async function loadConfig(stationId) {
+  const station = await stationDao.findById(stationId);
   if (!station) {
-    throw new AppError('stationNotFound', 'Station does not exist.', 404, {
-      stationId: input.stationId,
-    });
+    throw new AppError('stationNotFound', 'Station does not exist.', 404, { stationId });
   }
 
-  
-  const config = await deviceConfigDao.findByStationId(input.stationId);
+  const config = await deviceConfigDao.findByStationId(stationId);
   if (!config) {
-    throw new AppError('configNotFound', 'Station has no config.', 404, {
-      stationId: input.stationId,
-    });
+    throw new AppError('configNotFound', 'Station has no config.', 404, { stationId });
   }
+  return config;
+}
 
-  
-  const mode = input.mode ?? config.operatingMode;
-
-  
-  const { states, scores, insights } = evaluateTelemetry(input.measurements, config);
-
-  
-  const saved = await telemetryDao.create({
-    stationId: input.stationId,
-    timestamp: input.timestamp,
-    mode,
-    measurements: input.measurements,
+// Evaluates one measurement and builds the complete record to save
+function buildRecord(stationId, record, config) {
+  const { states, scores, insights } = evaluateTelemetry(record.measurements, config);
+  return {
+    stationId,
+    timestamp: record.timestamp,
+    mode: record.mode ?? config.operatingMode, 
+    measurements: record.measurements,
     states,
     scores,
     insights,
-  });
+  };
+}
+
+
+async function receive(input) {
+
+  const warnings = validateInput(input, receiveSchema);
+
+  const config = await loadConfig(input.stationId);
+
+  const record = buildRecord(input.stationId, input, config);
+  const saved = await telemetryDao.create(record);
 
   if (!saved) {
     warnings.push({
@@ -52,11 +52,51 @@ async function receive(input) {
     });
   }
 
-  
   await stationDao.updateStatus(input.stationId, 'ONLINE', new Date());
 
-  
   const output = { status: 'OK', telemetryId: saved ? saved.id : null };
+  if (warnings.length > 0) {
+    output.warnings = warnings;
+  }
+  return output;
+}
+
+async function receiveBatch(input) {
+
+  const warnings = validateInput(input, batchSchema);
+
+  const config = await loadConfig(input.stationId);
+
+  const records = input.records.map((record) => buildRecord(input.stationId, record, config));
+
+  let savedCount = 0;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    for (const record of records) {
+      const saved = await telemetryDao.create(record, client);
+      if (saved) savedCount++;
+    }
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+
+  const skippedCount = records.length - savedCount;
+  if (skippedCount > 0) {
+    warnings.push({
+      code: 'duplicateRecords',
+      message: 'Some records already existed and were not saved again.',
+      details: { skippedCount },
+    });
+  }
+
+  await stationDao.updateStatus(input.stationId, 'ONLINE', new Date());
+
+  const output = { status: 'OK', savedCount };
   if (warnings.length > 0) {
     output.warnings = warnings;
   }
@@ -69,7 +109,6 @@ const RANGES = {
   '30d': { hours: 24 * 30, bucket: '6 hours' },  // 120 points
 };
 
-// GET /api/telemetry/history
 async function getHistory(input) {
 
   const warnings = validateInput(input, historySchema);
@@ -97,4 +136,4 @@ async function getHistory(input) {
   return output;
 }
 
-module.exports = { receive, getHistory };
+module.exports = { receive, receiveBatch, getHistory };

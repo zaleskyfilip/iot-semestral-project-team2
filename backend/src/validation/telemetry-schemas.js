@@ -22,10 +22,29 @@ const receiveSchema = {
   measurements,
 };
 
+// POST /api/telemetry/batch
+const batchSchema = {
+  stationId: { type: 'string', required: true, format: 'uuid' },
+  records: {
+    type: 'array',
+    required: true,
+    minItems: 1,
+    maxItems: 1000,
+    items: {
+      type: 'object',
+      properties: {
+        timestamp: { type: 'string', required: true, format: 'date-time' },
+        mode: { type: 'string', required: false, enum: MODES },
+        measurements,
+      },
+    },
+  },
+};
+
 // GET /api/telemetry/history
 const historySchema = {
   stationId: { type: 'string', required: true, format: 'uuid' },
   range: { type: 'string', required: false, enum: ['24h', '7d', '30d'] },
 };
 
-module.exports = { receiveSchema, historySchema, measurements, MODES };
+module.exports = { receiveSchema, batchSchema, historySchema, measurements, MODES };

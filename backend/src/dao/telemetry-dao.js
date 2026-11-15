@@ -32,8 +32,8 @@ function toTelemetry(row) {
 }
 
 // Saves one telemetry record
-async function create(t) {
-  const { rows } = await pool.query(
+async function create(t, db = pool) {
+  const { rows } = await db.query(
     `INSERT INTO telemetry (
        station_id, measured_at, mode,
        co2, voc, pm25, temperature, humidity, light, pressure,

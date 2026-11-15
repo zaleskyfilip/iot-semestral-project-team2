@@ -8,7 +8,7 @@ const dashboardRoutes = require('./routes/dashboard-routes');
 
 const app = express();
 
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 
 // Health check
 app.get('/api/health', async (req, res) => {
