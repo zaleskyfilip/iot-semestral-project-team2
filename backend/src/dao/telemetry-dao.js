@@ -1,4 +1,35 @@
 const { pool } = require('../db');
+function toTelemetry(row) {
+  return {
+    id: row.id,
+    stationId: row.station_id,
+    timestamp: row.measured_at,
+    mode: row.mode,
+    measurements: {
+      co2: row.co2,
+      voc: row.voc,
+      pm25: row.pm25,
+      temperature: row.temperature,
+      humidity: row.humidity,
+      light: row.light,
+      pressure: row.pressure,
+    },
+    states: {
+      co2: row.co2_state,
+      voc: row.voc_state,
+      pm25: row.pm25_state,
+      temperature: row.temperature_state,
+      humidity: row.humidity_state,
+      light: row.light_state,
+      pressure: row.pressure_state,
+    },
+    scores: {
+      focusReadiness: row.focus_readiness,
+      healthComfort: row.health_comfort,
+    },
+    insights: row.insights,
+  };
+}
 
 // Saves one telemetry record
 async function create(t) {
@@ -26,4 +57,15 @@ async function create(t) {
   return rows[0] ?? null;
 }
 
-module.exports = { create };
+async function findLatestByStation(stationId) {
+  const { rows } = await pool.query(
+    `SELECT * FROM telemetry
+     WHERE station_id = $1
+     ORDER BY measured_at DESC
+     LIMIT 1`,
+    [stationId]
+  );
+  return rows[0] ? toTelemetry(rows[0]) : null;
+}
+
+module.exports = { create, findLatestByStation };
