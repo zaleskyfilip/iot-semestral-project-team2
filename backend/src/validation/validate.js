@@ -2,15 +2,15 @@ const AppError = require('../errors/app-error');
 
 const DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const TIME = /^([01]\d|2[0-3]):[0-5]\d$/; 
 
-// Like typeof, but tells arrays and null apart from objects
+
 function typeOf(value) {
   if (Array.isArray(value)) return 'array';
   if (value === null) return 'null';
   return typeof value;
 }
 
-// Checks every key of an object against its schema
 function checkObject(schema, obj, path, result) {
   for (const key of Object.keys(obj)) {
     if (!(key in schema)) {
@@ -22,7 +22,7 @@ function checkObject(schema, obj, path, result) {
   }
 }
 
-// Checks one value against one rule, e.g. { type: "number", required: true }
+
 function checkValue(rule, value, keyPath, result) {
   if (value === undefined) {
     if (rule.required) {
@@ -41,6 +41,15 @@ function checkValue(rule, value, keyPath, result) {
   }
   if (rule.format === 'uuid' && !UUID.test(value)) {
     result.invalidValues[keyPath] = 'Expected a UUID.';
+  }
+    if (rule.format === 'time' && !TIME.test(value)) {
+    result.invalidValues[keyPath] = 'Expected a time in HH:MM format, e.g. 08:00.';
+  }
+  if (rule.integer && !Number.isInteger(value)) {
+    result.invalidValues[keyPath] = 'Expected a whole number.';
+  }
+  if (rule.min !== undefined && value < rule.min) {
+    result.invalidValues[keyPath] = `Expected at least ${rule.min}.`;
   }
   if (rule.enum && !rule.enum.includes(value)) {
     result.invalidValues[keyPath] = `Expected one of: ${rule.enum.join(', ')}.`;
@@ -63,8 +72,6 @@ function checkValue(rule, value, keyPath, result) {
   }
 }
 
-// The validation step from the Command List (steps 1.1 - 1.3)
-// Returns a list of warnings, or throws an AppError if the input is invalid.
 function validateInput(input, schema) {
   const result = {
     unsupportedKeys: [],
@@ -79,7 +86,6 @@ function validateInput(input, schema) {
     checkObject(schema, input, '', result);
   }
 
-  // Error: the input is not valid, so the request stops here
   const hasErrors =
     Object.keys(result.invalidTypes).length > 0 ||
     Object.keys(result.invalidValues).length > 0 ||
@@ -93,7 +99,6 @@ function validateInput(input, schema) {
     });
   }
 
-  // Warning: unknown keys are ignored, but the request continues
   const warnings = [];
   if (result.unsupportedKeys.length > 0) {
     warnings.push({

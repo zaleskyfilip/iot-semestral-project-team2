@@ -28,4 +28,35 @@ async function findByStationId(stationId) {
   return rows[0] ? toConfig(rows[0]) : null;
 }
 
-module.exports = { findByStationId };
+async function createDefault(stationId) {
+  await pool.query(
+    'INSERT INTO device_config (station_id) VALUES ($1) ON CONFLICT (station_id) DO NOTHING',
+    [stationId]
+  );
+}
+
+// Saves all fields of a config
+async function update(stationId, config) {
+  const { rows } = await pool.query(
+    `UPDATE device_config
+     SET operating_mode = $2,
+         co2_mask = $3, voc_mask = $4, pm25_mask = $5, temperature_mask = $6,
+         humidity_mask = $7, light_mask = $8, pressure_mask = $9,
+         co2_warn = $10, co2_crit = $11,
+         schedule = $12,
+         updated_at = now()
+     WHERE station_id = $1
+     RETURNING *`,
+    [
+      stationId,
+      config.operatingMode,
+      config.masks.co2, config.masks.voc, config.masks.pm25, config.masks.temperature,
+      config.masks.humidity, config.masks.light, config.masks.pressure,
+      config.thresholds.co2Warn, config.thresholds.co2Crit,
+      JSON.stringify(config.schedule), 
+    ]
+  );
+  return rows[0] ? toConfig(rows[0]) : null;
+}
+
+module.exports = { findByStationId, createDefault, update };

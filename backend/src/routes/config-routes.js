@@ -9,4 +9,10 @@ router.get('/', async (req, res) => {
   res.json(output);
 });
 
+// PUT /api/config
+router.put('/', async (req, res) => {
+  const output = await configService.update(req.body);
+  res.json(output);
+});
+
 module.exports = router;

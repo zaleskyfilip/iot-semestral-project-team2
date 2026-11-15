@@ -10,16 +10,15 @@ const DEFAULT_LIMITS = {
   pressure: { kind: 'range', ok: [980, 1040], warn: [960, 1060] }, // hPa
 };
 
-// How much each sensor counts in each score (each set adds up to 1)
+// How much each sensor counts in each score
 const WEIGHTS = {
   focusReadiness: { co2: 0.44, light: 0.22, temperature: 0.17, voc: 0.17 },
   healthComfort: { co2: 0.3, pm25: 0.25, voc: 0.2, humidity: 0.15, temperature: 0.1 },
 };
 
-// Points per state, used for the scores
+// Points per state
 const POINTS = { OK: 100, WARN: 50, CRIT: 0 };
 
-// Text for Smart Insights
 const INSIGHT_TEXTS = {
   co2: { high: { WARN: 'CO2 is elevated - ventilate', CRIT: 'CO2 is critical - open a window now' } },
   voc: { high: { WARN: 'VOC level is elevated - ventilate', CRIT: 'VOC level is very high - ventilate now' } },
@@ -57,8 +56,7 @@ function judge(value, limits) {
   return { state: 'CRIT', direction };
 }
 
-// Weighted average of the points. Sensors in state IGNORED are left out,
-// and the remaining weights are scaled up so they add up to 1 again.
+// Weighted average of the points
 function calculateScore(states, weights) {
   let total = 0;
   let usedWeight = 0;
