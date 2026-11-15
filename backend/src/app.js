@@ -5,6 +5,7 @@ const AppError = require('./errors/app-error');
 const telemetryRoutes = require('./routes/telemetry-routes');
 const configRoutes = require('./routes/config-routes');
 const dashboardRoutes = require('./routes/dashboard-routes');
+const controlRoutes = require('./routes/control-routes');
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use('/api/stations', stationRoutes);
 app.use('/api/telemetry', telemetryRoutes);
 app.use('/api/config', configRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/control', controlRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

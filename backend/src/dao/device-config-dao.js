@@ -59,4 +59,12 @@ async function update(stationId, config) {
   return rows[0] ? toConfig(rows[0]) : null;
 }
 
-module.exports = { findByStationId, createDefault, update };
+// Changes the operating mode
+async function updateOperatingMode(stationId, mode) {
+  await pool.query(
+    'UPDATE device_config SET operating_mode = $2, updated_at = now() WHERE station_id = $1',
+    [stationId, mode]
+  );
+}
+
+module.exports = { findByStationId, createDefault, update, updateOperatingMode };
