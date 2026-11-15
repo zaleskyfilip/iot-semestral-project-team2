@@ -3,6 +3,7 @@ const { pool } = require('./db');
 const stationRoutes = require('./routes/station-routes');
 const AppError = require('./errors/app-error');
 const telemetryRoutes = require('./routes/telemetry-routes');
+const configRoutes = require('./routes/config-routes');
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.get('/api/health', async (req, res) => {
 // Routes
 app.use('/api/stations', stationRoutes);
 app.use('/api/telemetry', telemetryRoutes);
+app.use('/api/config', configRoutes);
 
 // No route matched the request
 app.use((req, res) => {
