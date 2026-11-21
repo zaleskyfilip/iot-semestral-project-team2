@@ -5,7 +5,7 @@ const { authorize } = require('../middleware/authorize');
 const router = express.Router();
 
 // GET /api/config?stationId=...
-router.get('/', authorize('USER', 'ADMIN'), async (req, res) => {
+router.get('/', authorize('USER', 'ADMIN', 'EDGE'), async (req, res) => {
   const output = await configService.get(req.query);
   res.json(output);
 });

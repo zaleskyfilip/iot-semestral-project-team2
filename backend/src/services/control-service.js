@@ -12,15 +12,16 @@ async function checkStationExists(stationId) {
   }
 }
 
-// POST /api/control/action
-async function sendAction(input) {
+async function sendAction(input, role) {
 
   const warnings = validateInput(input, actionSchema);
 
   const payload = input.payload ?? {};
 
-  if (input.action === 'SET_MODE' && !payload.mode) {
-    throw new AppError('modeMissing', 'SET_MODE requires payload.mode.', 400, {
+    // user can set modes but cannot do hardware tests (LED, buzzer etc.) - admin only
+    if (role === 'USER' && input.action !== 'SET_MODE') {
+    throw new AppError('forbidden', 'Role USER may only send SET_MODE.', 403, {
+      role,
       action: input.action,
     });
   }
@@ -40,7 +41,7 @@ async function sendAction(input) {
   return output;
 }
 
-// GET /api/control/pending
+
 async function takePending(input) {
   const warnings = validateInput(input, pendingSchema);
   await checkStationExists(input.stationId);
