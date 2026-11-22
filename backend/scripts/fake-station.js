@@ -1,8 +1,7 @@
-//   npm run fake-station               live: sends a measurement every 10 s
+//   npm run fake-station - sends a measurement every 10 s
 //   npm run fake-station -- --backfill sends the last 24 hours at once
-// ---------------------------------------------------------------
 
-const BASE_URL = `http://localhost:${process.env.PORT || 3000}/api`;
+const BASE_URL = `http://localhost:${process.env.PORT || 3000}/api/v1`;
 const STATION_ID = '11111111-1111-4111-8111-111111111111'; 
 const INTERVAL_SECONDS = 10;
 
