@@ -12,17 +12,17 @@ const app = express();
 app.use(express.json({ limit: '1mb' }));
 
 // Health check
-app.get('/api/health', async (req, res) => {
+app.get('/api/v1/health', async (req, res) => {
   await pool.query('SELECT 1');
   res.json({ status: 'OK', database: 'connected' });
 });
 
 // Routes
-app.use('/api/stations', stationRoutes);
-app.use('/api/telemetry', telemetryRoutes);
-app.use('/api/config', configRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/control', controlRoutes);
+app.use('/api/v1/stations', stationRoutes);
+app.use('/api/v1/telemetry', telemetryRoutes);
+app.use('/api/v1/config', configRoutes);
+app.use('/api/v1/dashboard', dashboardRoutes);
+app.use('/api/v1/control', controlRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

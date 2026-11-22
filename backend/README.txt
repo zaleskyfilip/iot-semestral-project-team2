@@ -37,7 +37,7 @@ Requirements: Node.js 24+ and Docker Desktop (running).
      npm run dev
 
 7. Check that it works - open in a browser:
-     http://localhost:3000/api/health
+     http://localhost:3000/api/v1/health
    Expected answer: {"status":"OK","database":"connected"}
 
 
